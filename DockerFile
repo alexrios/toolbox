@@ -1,0 +1,27 @@
+FROM FROM alpine:3.4
+
+//Increase security while docker doesn't support namespaces
+ENV USER usrapp
+ENV USRID 899
+ENV GROUP usrapp
+ENV GRPID 899
+
+ENV BASE_PATH=/app
+
+ENV LANG=C.UTF-8
+ENV EXEC_PATH=/usr/bin
+
+WORKDIR $BASE_PATH
+
+RUN apk --no-cache add tini openssl openssh-client curl git 
+ENTRYPOINT ["/sbin/tini", "--"]
+
+RUN addgroup -g $GRPID $GROUP;\
+    adduser -D -u $USRID -h $BASE_PATH -g $USER -G $GROUP -s /bin/sh $USER;\
+    chmod 770 $BASE_PATH;
+    
+RUN mkdir /root/.ssh
+RUN ssh-keyscan github.org >> /root/.ssh/known_hosts
+RUN ssh-keyscan bitbucket.org >> /root/.ssh/known_hosts
+
+RUN apk --no-cache add netcat-openbsd tcpdump nmap
